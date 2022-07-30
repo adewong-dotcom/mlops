@@ -1,6 +1,7 @@
 import os
 from fastapi.testclient import TestClient
 from .app.server import app
+import string
 
 os.chdir('app')
 client = TestClient(app)
@@ -25,15 +26,16 @@ def test_root():
     [TO BE IMPLEMENTED]
     Test the root ("/") endpoint, which just returns a {"Hello": "World"} json response
     """
-    pass
+    response = client.get("/")
+    assert response.json() == {"Hello": "World"}
 
-
+predict_file = client.get("/predict")
 def test_predict_empty():
     """
     [TO BE IMPLEMENTED]
     Test the "/predict" endpoint, with an empty request body
     """
-    pass
+    assert predict_file.json() == {""}
 
 
 def test_predict_en_lang():
@@ -41,7 +43,7 @@ def test_predict_en_lang():
     [TO BE IMPLEMENTED]
     Test the "/predict" endpoint, with an input text in English (you can use one of the test cases provided in README.md)
     """
-    pass
+    assert predict_file.json().translate(None, string.punctuation).isalnum()
 
 
 def test_predict_es_lang():
@@ -50,7 +52,7 @@ def test_predict_es_lang():
     Test the "/predict" endpoint, with an input text in Spanish. 
     Does the tokenizer and classifier handle this case correctly? Does it return an error?
     """
-    pass
+    assert predict_file.json().encode(encoding='utf-16').decode('ascii')
 
 
 def test_predict_non_ascii():
@@ -59,4 +61,4 @@ def test_predict_non_ascii():
     Test the "/predict" endpoint, with an input text that has non-ASCII characters. 
     Does the tokenizer and classifier handle this case correctly? Does it return an error?
     """
-    pass
+    assert not predict_file.json().isaccii()
