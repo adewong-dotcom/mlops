@@ -4,6 +4,7 @@ from loguru import logger
 import joblib
 from time import time
 import datetime
+import json
 
 from sentence_transformers import SentenceTransformer
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -157,18 +158,20 @@ def predict(request: PredictRequest):
     time = datetime.now().strftime("%Y:%m:%d %H:%M:%S")
     start_time = lambda: int(time() * 1000)
     prediction = data['model'].predict_proba(request.description)
+    label = data['model'].predict_label(request.description)
+    response = PredictResponse(scores = prediction, label = label)
     end_time = lambda: int(time() * 1000)
     latency = end_time - start_time;
     to_log = {
             'timestamp': time,
             'request': request.dict(),
             'prediction': prediction,
-            'latency': latency
+            'latency': f"{latency} ms"
     }
     logger.info(to_log)
     data['logger'].write(json.dumps(to_log)+ "\n")
     data['logger'].flush()
-    return {"prediction": prediction}
+    return response
 
 
 @app.get("/")
