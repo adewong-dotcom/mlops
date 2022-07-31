@@ -66,7 +66,7 @@ class NewsCategoryClassifier:
             dim = (config["featurizer"]["sentence_tranformer_embedding_dim"]),
             sentence_transformer_model = SentenceTransformer(f"sentence-transformers/{config['featurizer']['sentence_transformer_model']}"))
                   )
-        model = joblib.load(GLOBAL_CONFIG["model"]["classifier"]["serialized_model_path"])
+        model = joblib.load(config["model"]["classifier"]["serialized_model_path"])
         self.pipeline = Pipeline([
             ('transformer_featurizer', featurizer),
             ('classifier', model)
@@ -87,7 +87,7 @@ class NewsCategoryClassifier:
         }
         """
         my_proba = self.pipeline.predict_proba([model_input]
-        classes_to_probs = dict(zip(self.classes, my_proba[0].tolist()))
+        classes_to_probs = dict(zip(self.classes_, my_proba[0].tolist()))
         
         return classes_to_probs
 
