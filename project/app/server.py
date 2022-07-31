@@ -63,7 +63,7 @@ class NewsCategoryClassifier:
         """
         featurizer = TransformerFeaturizer(
             dim = (config["featurizer"]["sentence_tranformer_embedding_dim"]),
-            sentence_transformer_model = SentenceTransformer(f"sentence-transformers/{config["featurizer"]["sentence_transformer_model"]}")
+            sentence_transformer_model = SentenceTransformer(f"sentence-transformers/{config['featurizer']['sentence_transformer_model']}"))
                   )
         model = joblib.load(GLOBAL_CONFIG["model"]["classifier"]["serialized_model_path"])
         self.pipeline = Pipeline([
