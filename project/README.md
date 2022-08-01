@@ -204,7 +204,7 @@ $ tail -f ../data/logs.out
   "source": "Yahoo World",
   "url": "http://us.rd.yahoo.com/dailynews/rss/world/*http://story.news.yahoo.com/news?tmpl=story2u=/nm/20050104/bs_nm/markets_stocks_us_europe_dc",
   "title": "Wall Street Set to Open Firmer (Reuters)",
-  "description": "Reuters - Wall Street was set to start higher on\Tuesday to recoup some of the prior session's losses, though high-profile retailer Amazon.com  may come under\pressure after a broker downgrade."
+  "description": "Reuters - Wall Street was set to start higher on\Tuesday to recoup some of the prior session's losses, though high-profile retailer Amazon.com  may come under pressure after a broker downgrade."
 }
 ```
 
