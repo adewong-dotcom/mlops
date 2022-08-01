@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from loguru import logger
 import joblib
+#Imported libraries
 from time import time
 import datetime
 import json
@@ -17,11 +18,11 @@ GLOBAL_CONFIG = {
             "sentence_transformer_embedding_dim": 768
         },
         "classifier": {
-            "serialized_model_path": "./data/news_classifier.joblib"
+            "serialized_model_path": "../data/news_classifier.joblib"
         }
     },
     "service": {
-        "log_destination": "./data/logs.out"
+        "log_destination": "../data/logs.out"
     }
 }
 
@@ -63,10 +64,12 @@ class NewsCategoryClassifier:
         2. Load the serialized model as defined in GLOBAL_CONFIG['model'] into memory and initialize `model`
         """
         featurizer = TransformerFeaturizer(
-            dim = (config["featurizer"]["sentence_tranformer_embedding_dim"]),
-            sentence_transformer_model = SentenceTransformer(f"sentence-transformers/{config['featurizer']['sentence_transformer_model']}"))
-                  )
-        model = joblib.load(config["model"]["classifier"]["serialized_model_path"])
+            dim= (self.config["model"]["featurizer"]["sentence_transformer_embedding_dim"]), 
+            sentence_transformer_model = SentenceTransformer(self.config["model"]["featurizer"]["sentence_transformer_model"])
+        )
+        
+        model = joblib.load(self.config["model"]["classifier"]["serialized_model_path"])
+
         self.pipeline = Pipeline([
             ('transformer_featurizer', featurizer),
             ('classifier', model)
@@ -79,6 +82,7 @@ class NewsCategoryClassifier:
         run model inference on a given model input, and return the 
         model prediction probability scores across all labels
 
+
         Output format: 
         {
             "label_1": model_score_label_1,
@@ -86,7 +90,8 @@ class NewsCategoryClassifier:
             ...
         }
         """
-        my_proba = self.pipeline.predict_proba([model_input]
+        
+        my_proba = self.pipeline.predict_proba([model_input])
         classes_to_probs = dict(zip(self.classes_, my_proba[0].tolist()))
         
         return classes_to_probs
@@ -100,28 +105,44 @@ class NewsCategoryClassifier:
 
         Output format: predicted label for the model input
         """
+
         prediction = self.pipeline.predict([model_input])
+        
 
         return prediction[0]
 
 
 app = FastAPI()
+
 data = {}
-                                          
 
 @app.on_event("startup")
 def startup_event():
     """
         [TO BE IMPLEMENTED]
         2. Initialize the `NewsCategoryClassifier` instance to make predictions online. You should pass any relevant config parameters from `GLOBAL_CONFIG` that are needed by NewsCategoryClassifier 
-        3. Open an output file to write logs, at the destimation specififed by GLOBAL_CONFIG['service']['log_destination']
+        3. Open an output file to write logs, at the destination specififed by GLOBAL_CONFIG['service']['log_destination']
         
         Access to the model instance and log file will be needed in /predict endpoint, make sure you
         store them as global variables
+
     """
-    data['model'] = NewsCategoryClassifier(GLOBAL_CONFIG['model'])
-    data['logger'] = open(GLOBAL_CONFIG['service']['log_destination'], "w", encoding ='utf-8')
-                                               
+    """
+    config = {
+        "dim": GLOBAL_CONFIG["model"]["featurizer"]["sentence_transformer_embedding_dim"],
+        "sentence_transformer_model": GLOBAL_CONFIG["model"]["featurizer"]["sentence_transformer_model"]
+    }
+    my_proba = NewsCategoryClassifier(config)
+    out_file = open(GLOBAL_CONFIG['service']['log_destination'], "w")
+    for line in my_proba:
+        out_file.write(line)
+        out_file.write("\n")
+    out_file.close()
+    """
+
+    data['model'] = NewsCategoryClassifier(GLOBAL_CONFIG)
+    data['logger'] = open(GLOBAL_CONFIG['service']['log_destination'], mode="w")
+
     logger.info("Setup completed")
 
 
@@ -133,8 +154,9 @@ def shutdown_event():
         1. Make sure to flush the log file and close any file pointers to avoid corruption
         2. Any other cleanups
     """
-    data['logger'].flush()
-    data['logger'].close()
+    if data["logger"]:
+        data['logger'].flush()
+        data['logger'].close()
     logger.info("Shutting down application")
 
 
@@ -159,14 +181,14 @@ def predict(request: PredictRequest):
     start_time = lambda: int(time() * 1000)
     prediction = data['model'].predict_proba(request.description)
     label = data['model'].predict_label(request.description)
-    response = PredictResponse(scores = prediction, label = label)
+    response = PredictResponse(score = prediction, label = label)
     end_time = lambda: int(time() * 1000)
     latency = end_time - start_time;
     to_log = {
             'timestamp': time,
             'request': request.dict(),
             'prediction': prediction,
-            'latency': f"{latency} ms"
+            'latency': latency
     }
     logger.info(to_log)
     data['logger'].write(json.dumps(to_log)+ "\n")
