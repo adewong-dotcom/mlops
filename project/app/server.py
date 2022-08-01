@@ -141,7 +141,7 @@ def startup_event():
     """
 
     data['model'] = NewsCategoryClassifier(GLOBAL_CONFIG)
-    data['logger'] = open(GLOBAL_CONFIG['service']['log_destination'], mode="w")
+    data['logger'] = open(GLOBAL_CONFIG['service']['log_destination'], mode="w", encoding= utf-8)
 
     logger.info("Setup completed")
 
